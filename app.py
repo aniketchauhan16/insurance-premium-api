@@ -1,32 +1,23 @@
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse
 from schema.user_input import UserInput
-
-import pickle
+from model.predict import predict_output,model,MODEL_VERSION
 import pandas as pd
-
-# importing ml model
-with open('model/model.pkl','rb') as f:
-    model = pickle.load(f)
 
 app = FastAPI()
 
-#ml_flow
-MODEL_VERSION ='1.0.0'
-
-
 @app.post('/predict')
 def predict_premium(data: UserInput ):
-    input_df = pd.DataFrame([{
+    user_input = {
         'bmi': data.bmi,
         'age_group' : data.age_group,
         'lifestyle_risk' : data.lifestyle_risk,
         'city_tier': data.city_tier,
         'income_lpa': data.income_lpa,
         'occupation': data.occupation
-    }])
+    }
 
-    prediction = model.predict(input_df)[0]
+    prediction = predict_output(user_input)
 
     return JSONResponse(status_code=200, content={'predicted_category': str(prediction)})
 
