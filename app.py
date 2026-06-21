@@ -6,7 +6,7 @@ import pickle
 import pandas as pd
 
 # importing ml model
-with open('model.pkl','rb') as f:
+with open('model/model.pkl','rb') as f:
     model = pickle.load(f)
 
 app = FastAPI()
@@ -37,7 +37,7 @@ class UserInput(BaseModel):
     occupation: Annotated[Literal['retired', 'freelancer', 'student', 'government_job','business_owner', 'unemployed', 'private_job'], Field(..., description='Occupation of the user')]
 
     @computed_field
-    @property
+    @property   
     def bmi(self) -> float:
         return self.weight/(self.height**2)
     
@@ -86,4 +86,5 @@ def predict_premium(data: UserInput ):
 
     prediction = model.predict(input_df)[0]
 
-    return JSONResponse(status_code=200,content={'predicted_category'} : prediction )
+    return JSONResponse(status_code=200, content={'predicted_category': str(prediction)})
+
