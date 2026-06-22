@@ -8,3 +8,8 @@ __pycache__/
 varmenv/
 .venv
 env/
+
+venv/
+__pycache__/
+*.pyc
+.git/
