@@ -87,16 +87,16 @@ st.markdown("""
         border: 1px solid rgba(79, 172, 254, 0.3);
         box-shadow: 0 8px 25px -5px rgba(79, 172, 254, 0.4), inset 0 0 15px rgba(79, 172, 254, 0.1);
         border-radius: 16px;
-        padding: 2rem 1.5rem 1.5rem 1.5rem; /* Tweaked padding to fit perfectly */
+        padding: 2rem 1.5rem 1.5rem 1.5rem;
         text-align: center;
         position: relative;
         overflow: hidden;
         margin-top: 25px;
-        margin-bottom: 10px; /* Prevents the clipping overlap at the bottom */
+        margin-bottom: 10px;
         display: flex;
         flex-direction: column;
         justify-content: space-between;
-        min-height: 220px; /* Gives the box a solid structural height */
+        min-height: 220px;
     }
     
     .premium-result::before {
@@ -121,7 +121,7 @@ st.markdown("""
     }
     
     .result-tier {
-        font-size: 3.5rem; /* Made slightly larger */
+        font-size: 3.5rem;
         font-weight: 900;
         color: #ffffff;
         text-shadow: 0 0 25px rgba(79, 172, 254, 0.6);
@@ -135,7 +135,7 @@ st.markdown("""
         margin-top: auto; 
         margin-bottom: 0;
         padding-top: 15px;
-        border-top: 1px solid rgba(255, 255, 255, 0.05); /* Sleek divider line */
+        border-top: 1px solid rgba(255, 255, 255, 0.05);
     }
     </style>
 """, unsafe_allow_html=True)
@@ -206,37 +206,55 @@ with col_action:
         submit_button = st.button("Generate AI Assessment", use_container_width=True, type="primary")
         
         # --- API CONNECTION & RESULT ---
+        result_container = st.empty()
+
         if submit_button:
             input_data = {
-                "age": age,
-                "weight": weight,
-                "height": height,
-                "income_lpa": income_lpa,
-                "smoker": smoker,
-                "city": city,
+                "age": int(age),
+                "weight": float(weight),
+                "height": float(height),
+                "income_lpa": float(income_lpa),
+                "smoker": bool(smoker),
+                "city": city.strip().lower(),
                 "occupation": occupation
             }
 
-            with st.spinner("Querying prediction engine... (first request may take ~60s on cold start)"):
+            with st.spinner("Querying prediction engine... (may take up to 60s on cold start)"):
                 try:
                     response = requests.post(API_URL, json=input_data, timeout=120)
                     
                     if response.status_code == 200:
                         result = response.json()
-                        category = result.get('predicted_category', 'Unknown')
-                        
-                        st.markdown(f"""
-                            <div class="premium-result">
-                                <div class="result-label">Assessed Premium Tier</div>
-                                <div class="result-tier">{category}</div>
-                                <div class="metrics-text">Metrics applied successfully.</div>
-                            </div>
-                        """, unsafe_allow_html=True)
-                        
+                        api_data = result.get('response', {})
+                        category = api_data.get('predicted_category', 'Unknown')
                     else:
-                        st.error(f"⚠️ API Error: {response.status_code}")
+                        st.error(f"Backend API returned error status: {response.status_code}")
+                        category = "Error"
                         
-                except requests.exceptions.ConnectionError:
-                    st.error("🚨 Connection Failed: Ensure backend is running.")
                 except requests.exceptions.Timeout:
-                    st.error("⏱️ Request timed out. Render backend is cold starting — wait 30 seconds and try again.")
+                    st.error("The request timed out. Render is likely waking up. Please try again.")
+                    category = "Timeout"
+                except Exception as e:
+                    st.error(f"Could not connect to deployment: {e}")
+                    category = "Failed"
+
+            result_container.markdown(f"""
+                <div class="premium-result">
+                    <div>
+                        <div class="result-label">Assessed Premium Tier</div>
+                        <div class="result-tier">{category}</div>
+                    </div>
+                    <div class="metrics-text">Metrics applied successfully.</div>
+                </div>
+            """, unsafe_allow_html=True)
+            
+        else:
+            result_container.markdown("""
+                <div class="premium-result">
+                    <div>
+                        <div class="result-label">Assessed Premium Tier</div>
+                        <div class="result-tier">Unknown</div>
+                    </div>
+                    <div class="metrics-text">Ready for analysis.</div>
+                </div>
+            """, unsafe_allow_html=True)
