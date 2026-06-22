@@ -130,10 +130,10 @@ Predicts the insurance premium category for a given patient profile.
 ## 🏗️ Architecture
 
 ```
-┌──────────────┐      POST /predict      ┌───────────────┐      .pkl      ┌──────────────┐
-│  Streamlit   │ ───────────────────────▶ │   FastAPI     │ ─────────────▶ │  RandomForest │
-│  Frontend    │ ◀─────────────────────── │   + Pydantic  │ ◀───────────── │  Classifier   │
-└──────────────┘     JSON response        └───────────────┘   prediction   └──────────────┘
+┌──────────────┐      POST /predict         ┌───────────────┐      .pkl      ┌──────────────┐
+│  Streamlit   │ ───────────────────────▶  │   FastAPI     │ ─────────────▶ │  RandomForest│
+│  Frontend    │ ◀───────────────────────  │   + Pydantic  │ ◀───────────── │  Classifier  │
+└──────────────┘     JSON response          └───────────────┘   prediction   └──────────────┘
 ```
 
 **Why this stack:**
