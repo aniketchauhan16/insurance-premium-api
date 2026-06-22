@@ -9,17 +9,20 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
+# --- SESSION STATE INIT ---
+if "category" not in st.session_state:
+    st.session_state.category = None
+if "metrics_text" not in st.session_state:
+    st.session_state.metrics_text = "Click Generate to analyse."
+
 # --- ADVANCED COMPACT & BOXED CSS ---
 st.markdown("""
     <style>
-    /* Ultra-compact global container */
     .block-container {
         padding-top: 1.5rem !important;
         padding-bottom: 1rem !important;
         max-width: 1400px;
     }
-    
-    /* Gradient Title */
     .title-highlight {
         background: linear-gradient(135deg, #00f2fe 0%, #4facfe 100%);
         -webkit-background-clip: text;
@@ -30,7 +33,6 @@ st.markdown("""
         letter-spacing: -1px;
         margin-bottom: 0.2rem;
     }
-    
     .subtitle {
         color: #94a3b8;
         text-align: center;
@@ -38,8 +40,6 @@ st.markdown("""
         font-weight: 400;
         margin-bottom: 2rem;
     }
-
-    /* --- THE PREMIUM BOX STYLING --- */
     [data-testid="stVerticalBlockBorderWrapper"] {
         background: linear-gradient(145deg, rgba(15, 23, 42, 0.4) 0%, rgba(15, 23, 42, 0.1) 100%) !important;
         border: 1px solid rgba(255, 255, 255, 0.08) !important;
@@ -49,13 +49,11 @@ st.markdown("""
         transition: all 0.3s ease-in-out;
         height: 100%; 
     }
-    
     [data-testid="stVerticalBlockBorderWrapper"]:hover {
         border: 1px solid rgba(79, 172, 254, 0.3) !important;
         background: linear-gradient(145deg, rgba(15, 23, 42, 0.6) 0%, rgba(15, 23, 42, 0.2) 100%) !important;
         box-shadow: 0 10px 30px -10px rgba(79, 172, 254, 0.15) !important;
     }
-
     .section-hdr {
         color: #e2e8f0;
         font-size: 1.2rem;
@@ -68,7 +66,6 @@ st.markdown("""
         align-items: center;
         gap: 8px;
     }
-    
     .bmi-glass {
         background: rgba(255, 255, 255, 0.03);
         border: 1px solid rgba(255, 255, 255, 0.08);
@@ -80,8 +77,6 @@ st.markdown("""
         align-items: center;
         margin: 10px 0 20px 0;
     }
-    
-    /* --- UPGRADED TERMINAL RESULT CARD --- */
     .premium-result {
         background: linear-gradient(180deg, rgba(15, 23, 42, 0.95) 0%, rgba(15, 23, 42, 0.6) 100%);
         border: 1px solid rgba(79, 172, 254, 0.3);
@@ -98,7 +93,6 @@ st.markdown("""
         justify-content: space-between;
         min-height: 220px;
     }
-    
     .premium-result::before {
         content: '';
         position: absolute;
@@ -111,7 +105,6 @@ st.markdown("""
         0% { background-position: 0% center; }
         100% { background-position: 200% center; }
     }
-    
     .result-label {
         color: #94a3b8;
         font-size: 0.85rem;
@@ -119,7 +112,6 @@ st.markdown("""
         letter-spacing: 2px;
         margin-bottom: 0.5rem;
     }
-    
     .result-tier {
         font-size: 3.5rem;
         font-weight: 900;
@@ -128,7 +120,6 @@ st.markdown("""
         margin: 10px 0;
         letter-spacing: 1px;
     }
-    
     .metrics-text {
         color: #64748b;
         font-size: 12px;
@@ -153,28 +144,24 @@ OCCUPATION_MAP = {
     "Unemployed": "unemployed"
 }
 
-# --- HEADER SECTION ---
+# --- HEADER ---
 st.markdown('<div class="title-highlight">Insurance Premium Predictor</div>', unsafe_allow_html=True)
 st.markdown('<div class="subtitle">Predictive risk assessment powered by demographic and biometric analysis.</div>', unsafe_allow_html=True)
 
-# --- 3-COLUMN BOXED ARCHITECTURE ---
+# --- 3-COLUMN LAYOUT ---
 col_bio, col_socio, col_action = st.columns([1, 1, 1], gap="medium")
 
 with col_bio:
     with st.container(border=True):
         st.markdown('<div class="section-hdr">🧬 Biometric Profile</div>', unsafe_allow_html=True)
-        
         age = st.slider("Age (Years)", min_value=18, max_value=100, value=30)
         weight = st.slider("Weight (kg)", min_value=40.0, max_value=150.0, value=65.0, step=0.5)
         height = st.slider("Height (m)", min_value=1.40, max_value=2.20, value=1.70, step=0.01)
-        
-        # BMI Calculation
         bmi = weight / (height ** 2)
         if bmi < 18.5: bmi_color, bmi_status = "#fbbf24", "Underweight"
         elif bmi < 25: bmi_color, bmi_status = "#34d399", "Optimal"
         elif bmi < 30: bmi_color, bmi_status = "#fbbf24", "Overweight"
         else: bmi_color, bmi_status = "#f87171", "High Risk"
-        
         st.markdown(f"""
             <div class="bmi-glass">
                 <div style="color:#64748b; font-size:11px; text-transform:uppercase; letter-spacing:1px;">Calculated BMI</div>
@@ -184,28 +171,21 @@ with col_bio:
                 </div>
             </div>
         """, unsafe_allow_html=True)
-        
         smoker_choice = st.radio("Tobacco Usage", options=["Non-Smoker", "Active Smoker"], horizontal=True)
-        smoker = True if smoker_choice == "Active Smoker" else False
+        smoker = smoker_choice == "Active Smoker"
 
 with col_socio:
     with st.container(border=True):
         st.markdown('<div class="section-hdr">💼 Socioeconomic Factors</div>', unsafe_allow_html=True)
-        
         income_lpa = st.slider("Annual Income (LPA)", min_value=1.0, max_value=50.0, value=10.0, step=0.5)
-        
         display_occupation = st.selectbox("Occupational Field", options=list(OCCUPATION_MAP.keys()))
-        occupation = OCCUPATION_MAP[display_occupation] 
-        
+        occupation = OCCUPATION_MAP[display_occupation]
         city = st.text_input("Primary Residence", value="Mumbai", placeholder="e.g. Mumbai, Delhi")
 
 with col_action:
     with st.container(border=True):
         st.markdown('<div class="section-hdr">⚡ System Terminal</div>', unsafe_allow_html=True)
-        
         submit_button = st.button("Generate AI Assessment", use_container_width=True, type="primary")
-        
-        # --- API CONNECTION & RESULT ---
         result_container = st.empty()
 
         if submit_button:
@@ -215,46 +195,40 @@ with col_action:
                 "height": float(height),
                 "income_lpa": float(income_lpa),
                 "smoker": bool(smoker),
-                "city": city.strip().lower(),
+                "city": city.strip(),
                 "occupation": occupation
             }
-
-            with st.spinner("Querying prediction engine... (may take up to 60s on cold start)"):
+            with st.spinner("Querying prediction engine... (may take ~60s on cold start)"):
                 try:
                     response = requests.post(API_URL, json=input_data, timeout=120)
-                    
                     if response.status_code == 200:
                         result = response.json()
-                        api_data = result.get('response', {})
-                        category = api_data.get('predicted_category', 'Unknown')
+                        # FIX: read directly from result, not nested under 'response'
+                        st.session_state.category = result.get('predicted_category', 'Unknown')
+                        st.session_state.metrics_text = "Metrics applied successfully."
                     else:
-                        st.error(f"Backend API returned error status: {response.status_code}")
-                        category = "Error"
-                        
+                        st.session_state.category = "Error"
+                        st.session_state.metrics_text = f"API returned status {response.status_code}"
+                        st.error(f"Backend error: {response.status_code}")
                 except requests.exceptions.Timeout:
-                    st.error("The request timed out. Render is likely waking up. Please try again.")
-                    category = "Timeout"
+                    st.session_state.category = "Timeout"
+                    st.session_state.metrics_text = "Request timed out — try again."
+                    st.error("Timed out. Render is waking up — wait 30s and retry.")
                 except Exception as e:
-                    st.error(f"Could not connect to deployment: {e}")
-                    category = "Failed"
+                    st.session_state.category = "Failed"
+                    st.session_state.metrics_text = str(e)
+                    st.error(f"Connection error: {e}")
 
-            result_container.markdown(f"""
-                <div class="premium-result">
-                    <div>
-                        <div class="result-label">Assessed Premium Tier</div>
-                        <div class="result-tier">{category}</div>
-                    </div>
-                    <div class="metrics-text">Metrics applied successfully.</div>
+        # Always render from session_state — persists across reruns
+        display_category = st.session_state.category if st.session_state.category else "—"
+        display_metrics = st.session_state.metrics_text
+
+        result_container.markdown(f"""
+            <div class="premium-result">
+                <div>
+                    <div class="result-label">Assessed Premium Tier</div>
+                    <div class="result-tier">{display_category}</div>
                 </div>
-            """, unsafe_allow_html=True)
-            
-        else:
-            result_container.markdown("""
-                <div class="premium-result">
-                    <div>
-                        <div class="result-label">Assessed Premium Tier</div>
-                        <div class="result-tier">Unknown</div>
-                    </div>
-                    <div class="metrics-text">Ready for analysis.</div>
-                </div>
-            """, unsafe_allow_html=True)
+                <div class="metrics-text">{display_metrics}</div>
+            </div>
+        """, unsafe_allow_html=True)
