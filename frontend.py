@@ -141,7 +141,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # --- CONSTANTS ---
-API_URL = "http://localhost:8000/predict"
+API_URL = "https://insurance-premium-api-jokv.onrender.com/predict"
 
 OCCUPATION_MAP = {
     "Private Sector": "private_job",
