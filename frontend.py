@@ -217,7 +217,7 @@ with col_action:
                 "occupation": occupation
             }
 
-            with st.spinner("Encrypting & querying engine..."):
+            with st.spinner("Querying prediction engine... (first request may take ~60s on cold start)"):
                 try:
                     response = requests.post(API_URL, json=input_data)
                     
