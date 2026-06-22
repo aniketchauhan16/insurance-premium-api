@@ -219,7 +219,7 @@ with col_action:
 
             with st.spinner("Querying prediction engine... (first request may take ~60s on cold start)"):
                 try:
-                    response = requests.post(API_URL, json=input_data)
+                    response = requests.post(API_URL, json=input_data, timeout=120)
                     
                     if response.status_code == 200:
                         result = response.json()
@@ -238,3 +238,5 @@ with col_action:
                         
                 except requests.exceptions.ConnectionError:
                     st.error("🚨 Connection Failed: Ensure backend is running.")
+                except requests.exceptions.Timeout:
+                    st.error("⏱️ Request timed out. Render backend is cold starting — wait 30 seconds and try again.")
